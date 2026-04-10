@@ -61,7 +61,7 @@ class Hyperparameters:
 
     # Model shape.
     vocab_size = int(os.environ.get("VOCAB_SIZE", 1024))
-    num_layers = int(os.environ.get("NUM_LAYERS", 9))
+    num_layers = int(os.environ.get("NUM_LAYERS", 11))
     num_kv_heads = int(os.environ.get("NUM_KV_HEADS", 4))
     model_dim = int(os.environ.get("MODEL_DIM", 512))
     num_heads = int(os.environ.get("NUM_HEADS", 8))
@@ -70,6 +70,8 @@ class Hyperparameters:
     rope_base = float(os.environ.get("ROPE_BASE", 10000.0))
     logit_softcap = float(os.environ.get("LOGIT_SOFTCAP", 30.0))
     use_smeargate = bool(int(os.environ.get("USE_SMEARGATE", "1")))
+    bigram_hash_buckets = int(os.environ.get("BIGRAM_HASH_BUCKETS", 4096))
+    bigram_hash_dim = int(os.environ.get("BIGRAM_HASH_DIM", 128))
     eval_stride = int(os.environ.get("EVAL_STRIDE", 0))
     eval_batch_seqs = int(os.environ.get("EVAL_BATCH_SEQS", 32))
 
@@ -745,6 +747,25 @@ class Block(nn.Module):
         return x
 
 
+class BigramHash(nn.Module):
+    """Hash-table embedding for token bigrams, projected to model dim.
+    Maps (prev_token, cur_token) pairs via a simple hash to a learned embedding.
+    """
+    def __init__(self, num_buckets: int, hash_dim: int, model_dim: int):
+        super().__init__()
+        self.num_buckets = num_buckets
+        self.table = nn.Embedding(num_buckets, hash_dim)
+        self.proj = CastedLinear(hash_dim, model_dim, bias=False)
+        self.proj._zero_init = True
+        nn.init.normal_(self.table.weight, std=0.01)
+
+    def forward(self, input_ids: Tensor) -> Tensor:
+        bsz, seqlen = input_ids.shape
+        prev_ids = torch.cat([torch.zeros(bsz, 1, dtype=input_ids.dtype, device=input_ids.device), input_ids[:, :-1]], dim=1)
+        h = ((prev_ids.long() * 92821 + input_ids.long()) % self.num_buckets).long()
+        return self.proj(self.table(h))
+
+
 class SmearGate(nn.Module):
     """Blend each token's embedding with the previous token's via a learned gate.
     gate = sigmoid(self.gate) ≈ 0.95 at init (mostly pass-through).
@@ -776,6 +797,8 @@ class GPT(nn.Module):
         rope_base: float,
         qk_gain_init: float,
         use_smeargate: bool = False,
+        bigram_hash_buckets: int = 0,
+        bigram_hash_dim: int = 128,
     ):
         super().__init__()
         if logit_softcap <= 0.0:
@@ -785,6 +808,7 @@ class GPT(nn.Module):
         self.logit_softcap = logit_softcap
         self.tok_emb = nn.Embedding(vocab_size, model_dim)
         self.smeargate = SmearGate(model_dim) if use_smeargate else None
+        self.bigram_hash = BigramHash(bigram_hash_buckets, bigram_hash_dim, model_dim) if bigram_hash_buckets > 0 else None
         self.num_encoder_layers = num_layers // 2
         self.num_decoder_layers = num_layers - self.num_encoder_layers
         self.num_skip_weights = min(self.num_encoder_layers, self.num_decoder_layers)
@@ -821,6 +845,8 @@ class GPT(nn.Module):
         x = F.rms_norm(x, (x.size(-1),))
         if self.smeargate is not None:
             x = self.smeargate(x)
+        if self.bigram_hash is not None:
+            x = x + self.bigram_hash(input_ids)
         x0 = x
         skips: list[Tensor] = []
 
@@ -973,6 +999,8 @@ def main() -> None:
         rope_base=args.rope_base,
         qk_gain_init=args.qk_gain_init,
         use_smeargate=args.use_smeargate,
+        bigram_hash_buckets=args.bigram_hash_buckets,
+        bigram_hash_dim=args.bigram_hash_dim,
     ).to(device).bfloat16()
     for module in base_model.modules():
         if isinstance(module, CastedLinear):
@@ -1001,9 +1029,13 @@ def main() -> None:
         scalar_params.append(base_model.skip_weights)
     if base_model.smeargate is not None:
         scalar_params.append(base_model.smeargate.gate)
+    tok_embed_params: list[nn.Parameter] = [base_model.tok_emb.weight]
+    if base_model.bigram_hash is not None:
+        tok_embed_params.append(base_model.bigram_hash.table.weight)
+        matrix_params.append(base_model.bigram_hash.proj.weight)
     token_lr = args.tied_embed_lr if args.tie_embeddings else args.embed_lr
     optimizer_tok = torch.optim.Adam(
-        [{"params": [base_model.tok_emb.weight], "lr": token_lr, "base_lr": token_lr}],
+        [{"params": tok_embed_params, "lr": token_lr, "base_lr": token_lr}],
         betas=(args.beta1, args.beta2),
         eps=args.adam_eps,
         fused=True,
