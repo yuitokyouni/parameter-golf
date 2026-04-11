@@ -5,7 +5,10 @@
       "Bash(ssh:*)",
       "Bash(handle64.exe \"C:\\\\Users\\\\yuito\\\\OneDrive\\\\Documents\\\\GitHub\\\\parameter-golf\\\\data\")",
       "Bash(powershell -Command 'Get-Process | Where-Object { $_.Path -like '\\\\''*parameter-golf*'\\\\'' }')",
-      "Bash(GIT_WORK_TREE=. git merge:*)"
+      "Bash(GIT_WORK_TREE=. git merge:*)",
+      "Bash(nvidia-smi)",
+      "Bash(python -c \"import torch; print\\('torch:', torch.__version__\\); print\\('cuda:', torch.cuda.is_available\\(\\)\\); print\\('device:', torch.cuda.get_device_name\\(0\\) if torch.cuda.is_available\\(\\) else 'none'\\)\")",
+      "Bash(python:*)"
     ]
   }
 }
