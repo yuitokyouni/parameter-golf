@@ -28,7 +28,12 @@
       "Bash(awk 'NR%20==0')",
       "Bash(awk '-F[/ :]' '{for\\(i=1;i<=NF;i++\\)if\\($i==\"val_bpb\"\\){print $2, $\\(i+1\\)}}')",
       "Bash(python3:*)",
-      "Bash(chmod +x run_full.sh)"
+      "Bash(chmod +x run_full.sh)",
+      "Bash(diff -u train_exp9.py train_exp6.py)",
+      "Read(//tmp/**)",
+      "Bash(chmod +x run_romance.sh)",
+      "Bash(ls -la logs/exp11_full* logs/exp12_full*)",
+      "Bash(ls -la logs/exp1[12]*)"
     ]
   }
 }
