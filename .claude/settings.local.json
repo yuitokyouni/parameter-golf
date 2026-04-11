@@ -2,7 +2,10 @@
   "permissions": {
     "allow": [
       "Bash(git:*)",
-      "Bash(ssh:*)"
+      "Bash(ssh:*)",
+      "Bash(handle64.exe \"C:\\\\Users\\\\yuito\\\\OneDrive\\\\Documents\\\\GitHub\\\\parameter-golf\\\\data\")",
+      "Bash(powershell -Command 'Get-Process | Where-Object { $_.Path -like '\\\\''*parameter-golf*'\\\\'' }')",
+      "Bash(GIT_WORK_TREE=. git merge:*)"
     ]
   }
 }
