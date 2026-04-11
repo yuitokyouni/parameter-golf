@@ -26,7 +26,9 @@
       "Bash(MAX_WALLCLOCK_SECONDS=60 EVAL_STRIDE=64 VAL_LOSS_EVERY=200 EMA_DECAY=0.997 DATA_PATH=./data/datasets/fineweb10B_sp1024/ TOKENIZER_PATH=./data/tokenizers/fineweb_1024_bpe.model VOCAB_SIZE=1024 RUN_ID=exp6_smoke torchrun --standalone --nproc_per_node=4 train_exp6.py)",
       "Bash(grep -l \"exp1\\\\|SmearGate\" records/track_10min_16mb/*/README.md)",
       "Bash(awk 'NR%20==0')",
-      "Bash(awk '-F[/ :]' '{for\\(i=1;i<=NF;i++\\)if\\($i==\"val_bpb\"\\){print $2, $\\(i+1\\)}}')"
+      "Bash(awk '-F[/ :]' '{for\\(i=1;i<=NF;i++\\)if\\($i==\"val_bpb\"\\){print $2, $\\(i+1\\)}}')",
+      "Bash(python3:*)",
+      "Bash(chmod +x run_full.sh)"
     ]
   }
 }
