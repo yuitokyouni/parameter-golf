@@ -1,3 +1,11 @@
+# exp16: 5L×3 Weight-Tied with Detach + Dynamic Blend
+# Changes from exp14:
+#   - num_layers: 5 (from 6) — 5 unique blocks x 3 passes = 15 effective depth
+#   - num_passes: 3 (from 2) — 3 passes through the same blocks
+#   - Pass 0 has gradients, Pass 1+ uses torch.no_grad() (detach strategy)
+#   - 3 passes' outputs blended via softmax(pass_router(x0)) weighted sum
+#   - SWA_ENABLED=0 by default
+#   - blend_stats logged at validation time (avg pass weights)
 from __future__ import annotations
 import copy
 import glob
@@ -66,11 +74,11 @@ class Hyperparameters:
     max_wallclock_seconds = float(os.environ.get("MAX_WALLCLOCK_SECONDS", 600.0))
     qk_gain_init = float(os.environ.get("QK_GAIN_INIT", 1.5))
     vocab_size = int(os.environ.get("VOCAB_SIZE", 1024))
-    # exp11: Weight-Tied 6L×2. num_layers = number of UNIQUE blocks (banks).
-    # Forward runs each block twice: pass 1 = encoder (push skips), pass 2 = decoder (pop skips).
-    # Effective depth = 2 * num_layers = 12 positions.
-    num_layers = int(os.environ.get("NUM_LAYERS", 6))
-    num_passes = int(os.environ.get("NUM_PASSES", 2))  # how many times to cycle through the banks
+    # exp16: Weight-Tied 5L×3 with detach + dynamic blend.
+    # Forward runs each block 3 times: pass 0 (grad), pass 1-2 (no_grad/detach).
+    # Outputs blended via learned router. Effective depth = 3 * num_layers = 15.
+    num_layers = int(os.environ.get("NUM_LAYERS", 5))
+    num_passes = int(os.environ.get("NUM_PASSES", 3))  # how many times to cycle through the banks
     num_kv_heads = int(os.environ.get("NUM_KV_HEADS", 4))
     # Default 672 (safe). Bump to 688 via MODEL_DIM=688 env var if 672 survives selective pruning
     # with comfortable headroom. num_heads=8 => head_dim=84 at 672 / 86 at 688, both even.
@@ -100,7 +108,7 @@ class Hyperparameters:
     mtp_num_heads = int(os.environ.get("MTP_NUM_HEADS", 0))
     mtp_loss_weight = float(os.environ.get("MTP_LOSS_WEIGHT", 0.2))
     muon_beta2 = float(os.environ.get("MUON_BETA2", 0.95))
-    swa_enabled = bool(int(os.environ.get("SWA_ENABLED", "1")))
+    swa_enabled = bool(int(os.environ.get("SWA_ENABLED", "0")))
     swa_every = int(os.environ.get("SWA_EVERY", 50))
     lawa_enabled = bool(int(os.environ.get("LAWA_ENABLED", "0")))
     lawa_k = int(os.environ.get("LAWA_K", 10))
@@ -111,16 +119,16 @@ class Hyperparameters:
     bigram_vocab_size = int(os.environ.get("BIGRAM_VOCAB_SIZE", 2048))
     bigram_dim = int(os.environ.get("BIGRAM_DIM", 128))
     trigram_enabled = bool(int(os.environ.get("TRIGRAM", "0")))  # TrigramHash (off by default, risky)
-    xsa_last_n = int(os.environ.get("XSA_LAST_N", 6))  # XSA on ALL unique blocks (each called twice)
+    xsa_last_n = int(os.environ.get("XSA_LAST_N", 5))  # XSA on ALL unique blocks (each called 3x)
     rope_dims = int(os.environ.get("ROPE_DIMS", 16))
     ln_scale = bool(int(os.environ.get("LN_SCALE", "1")))
     dtg_enabled = bool(int(os.environ.get("DTG_ENABLED", "0")))
     late_qat_threshold = float(os.environ.get("LATE_QAT_THRESHOLD", 0.15))
     ve_enabled = bool(int(os.environ.get("VE_ENABLED", "1")))
     ve_dim = int(os.environ.get("VE_DIM", 128))
-    # With 2-pass weight tying, "effective positions" run 0..11. Default VE at last 2 positions
-    # of pass 2 (positions 10 and 11), mirroring the "last 2 of 11" schedule in the baseline.
-    ve_layers = os.environ.get("VE_LAYERS", "10,11")
+    # With 3-pass weight tying, "effective positions" run 0..14. Default VE at last 2 positions
+    # of pass 2 (positions 13 and 14), mirroring the "last 2" schedule in the baseline.
+    ve_layers = os.environ.get("VE_LAYERS", "13,14")
     gated_attention = bool(int(os.environ.get("GATED_ATTENTION", "0")))
     value_residual = bool(int(os.environ.get("VALUE_RESIDUAL", "0")))  # VRL with sigmoid gates (off by default, risky)
     # GPTQ calibration
@@ -854,12 +862,19 @@ class GPT(nn.Module):
         self.tok_emb = nn.Embedding(vocab_size, model_dim)
         self.bigram = BigramHashEmbedding(bigram_vocab_size, bigram_dim, model_dim, trigram=bool(int(os.environ.get("TRIGRAM", "0")))) if bigram_vocab_size > 0 else None
         self.smear = SmearGate(model_dim)
-        # Weight-tied 6L×2: each unique block is used once as encoder and once as decoder.
-        # num_encoder_layers == num_decoder_layers == num_layers (= unique block count).
+        # Weight-tied 5L×3: each unique block runs 3 times (pass 0=grad, 1-2=detach).
+        # Pass 0 = encoder (push skips), Pass 1-2 = decoder passes (pop/reuse skips).
+        self.num_passes = 3
         self.num_encoder_layers = num_layers
         self.num_decoder_layers = num_layers
-        self.num_skip_weights = num_layers
+        # Skip weights: one set per decoder pass (passes 1 and 2)
+        self.num_skip_weights = num_layers * 2  # 5 skip weights × 2 decoder passes
         self.skip_weights = nn.Parameter(torch.ones(self.num_skip_weights, model_dim, dtype=torch.float32))
+        # Zero-init pass 2 skip weights for gradual learning
+        self.skip_weights.data[num_layers:] = 0.0
+        # Dynamic blend router: projects x0 to num_passes logits per token
+        self.pass_router = nn.Linear(model_dim, self.num_passes, bias=False)
+        nn.init.zeros_(self.pass_router.weight)  # Start uniform (softmax of zeros = 1/3 each)
         # exp12: remember whether ln_scale is enabled so _effective_ln_scale can short-circuit.
         self._ln_scale_enabled = bool(ln_scale)
         # Parameter banks: contiguous 3D tensors for batched optimizer
@@ -952,11 +967,30 @@ class GPT(nn.Module):
         return ve_base * self.ve_layer_scales[ve_idx].to(dtype=ve_base.dtype)
     def _effective_ln_scale(self, round_id: int, layer_id: int) -> float:
         # exp12: ln_scale uses the effective depth across the 2-pass weight-tied loop.
-        # round_id ∈ {0, 1}, layer_id ∈ {0, ..., num_layers-1}.
-        # effective_depth = round_id * num_layers + layer_id + 1  (range: 1..2*num_layers)
+        # round_id ∈ {0, 1, 2}, layer_id ∈ {0, ..., num_layers-1}.
+        # effective_depth = round_id * num_layers + layer_id + 1  (range: 1..3*num_layers)
         if not self._ln_scale_enabled:
             return 1.0
         return 1.0 / math.sqrt(round_id * self.num_layers + layer_id + 1)
+    def _run_pass(self, x: Tensor, x0: Tensor, v0: Tensor | None, input_ids: Tensor,
+                  ve_cache: dict, pass_id: int, skips_rev: list[Tensor]) -> Tensor:
+        """Run a single pass (encoder or decoder) through all layers."""
+        n = self.num_layers
+        for i in range(n):
+            pos = pass_id * n + i  # effective position for VE and ln_scale
+            # Decoder passes (1+): add skip connections
+            if pass_id > 0:
+                skip_idx = (pass_id - 1) * n + i
+                x = x + self.skip_weights[skip_idx].to(dtype=x.dtype)[None, None, :] * skips_rev[i]
+            ve = self._get_ve(pos, input_ids, ve_cache)
+            lnf = self._effective_ln_scale(pass_id, i)
+            x, raw_v = self.blocks[i](x, x0,
+                self.qo_bank[i], self.kv_bank[i], self.kv_bank[n + i],
+                self.qo_bank[n + i], self.mlp_up_bank[i], self.mlp_down_bank[i],
+                v_embed=ve, v0=v0, ln_scale_factor=lnf)
+            if v0 is None and raw_v is not None:
+                v0 = raw_v
+        return x
     def forward(self, input_ids: Tensor, target_ids: Tensor) -> Tensor:
         n = self.num_layers
         x = self.tok_emb(input_ids)
@@ -966,10 +1000,15 @@ class GPT(nn.Module):
         x = self.smear(x)
         x0 = x
         v0 = None
-        skips: list[Tensor] = []
         ve_cache: dict = {}
-        # Pass 1 (encoder): run all `n` unique blocks, push skips.
-        for i in range(self.num_encoder_layers):
+        # Compute blend weights from x0: [B, T, num_passes]
+        blend_logits = self.pass_router(x0.detach())  # detach x0 so router doesn't affect encoder grad
+        blend_weights = F.softmax(blend_logits, dim=-1)  # [B, T, 3]
+        # Store blend weights for logging (detached)
+        self._last_blend_weights = blend_weights.detach()
+        # === Pass 0 (encoder): WITH gradients, push skips ===
+        skips: list[Tensor] = []
+        for i in range(n):
             ve = self._get_ve(i, input_ids, ve_cache)
             lnf = self._effective_ln_scale(0, i)
             x, raw_v = self.blocks[i](x, x0,
@@ -979,17 +1018,17 @@ class GPT(nn.Module):
             if v0 is None and raw_v is not None:
                 v0 = raw_v
             skips.append(x)
-        # Pass 2 (decoder): reuse the SAME `n` blocks and banks. Skips pop LIFO.
-        for i in range(self.num_decoder_layers):
-            pos = self.num_encoder_layers + i  # effective position (n..2n-1), used for VE lookup
-            if skips:
-                x = x + self.skip_weights[i].to(dtype=x.dtype)[None, None, :] * skips.pop()
-            ve = self._get_ve(pos, input_ids, ve_cache)
-            lnf = self._effective_ln_scale(1, i)
-            x, _ = self.blocks[i](x, x0,
-                self.qo_bank[i], self.kv_bank[i], self.kv_bank[n + i],
-                self.qo_bank[n + i], self.mlp_up_bank[i], self.mlp_down_bank[i],
-                v_embed=ve, v0=v0, ln_scale_factor=lnf)
+        pass_outputs = [x]  # pass 0 output
+        skips_rev = list(reversed(skips))  # LIFO order for decoder passes
+        # === Pass 1+ (decoder passes): NO gradients (detach strategy) ===
+        for pass_id in range(1, self.num_passes):
+            with torch.no_grad():
+                x_dec = self._run_pass(x.detach(), x0, v0, input_ids, ve_cache, pass_id, skips_rev)
+            pass_outputs.append(x_dec)
+        # === Dynamic blend: weighted sum of pass outputs ===
+        # pass_outputs: list of [B, T, D], blend_weights: [B, T, 3]
+        stacked = torch.stack(pass_outputs, dim=-1)  # [B, T, D, num_passes]
+        x = (stacked * blend_weights.unsqueeze(2)).sum(dim=-1)  # [B, T, D]
         x = self.final_norm(x)
         x_flat = x.reshape(-1, x.size(-1))
         targets = target_ids.reshape(-1)
@@ -1028,10 +1067,14 @@ class GPT(nn.Module):
         x = self.smear(x)
         x0 = x
         v0 = None
-        skips: list[Tensor] = []
         ve_cache: dict = {}
-        # Pass 1 (encoder): run all `n` unique blocks, push skips.
-        for i in range(self.num_encoder_layers):
+        # Blend weights
+        blend_logits = self.pass_router(x0)
+        blend_weights = F.softmax(blend_logits, dim=-1)  # [B, T, 3]
+        self._last_blend_weights = blend_weights.detach()
+        # Pass 0 (encoder)
+        skips: list[Tensor] = []
+        for i in range(n):
             ve = self._get_ve(i, input_ids, ve_cache)
             lnf = self._effective_ln_scale(0, i)
             x, raw_v = self.blocks[i](x, x0,
@@ -1041,17 +1084,16 @@ class GPT(nn.Module):
             if v0 is None and raw_v is not None:
                 v0 = raw_v
             skips.append(x)
-        # Pass 2 (decoder): reuse the SAME `n` blocks and banks. Skips pop LIFO.
-        for i in range(self.num_decoder_layers):
-            pos = self.num_encoder_layers + i
-            if skips:
-                x = x + self.skip_weights[i].to(dtype=x.dtype)[None, None, :] * skips.pop()
-            ve = self._get_ve(pos, input_ids, ve_cache)
-            lnf = self._effective_ln_scale(1, i)
-            x, _ = self.blocks[i](x, x0,
-                self.qo_bank[i], self.kv_bank[i], self.kv_bank[n + i],
-                self.qo_bank[n + i], self.mlp_up_bank[i], self.mlp_down_bank[i],
-                v_embed=ve, v0=v0, ln_scale_factor=lnf)
+        pass_outputs = [x]
+        skips_rev = list(reversed(skips))
+        # Pass 1+ (decoder): no_grad
+        for pass_id in range(1, self.num_passes):
+            with torch.no_grad():
+                x_dec = self._run_pass(x.detach(), x0, v0, input_ids, ve_cache, pass_id, skips_rev)
+            pass_outputs.append(x_dec)
+        # Blend
+        stacked = torch.stack(pass_outputs, dim=-1)
+        x = (stacked * blend_weights.unsqueeze(2)).sum(dim=-1)
         x = self.final_norm(x)
         if self.tie_embeddings:
             logits_proj = F.linear(x, self.tok_emb.weight)
@@ -1465,11 +1507,13 @@ class _HessianGPT(nn.Module):
         self.tok_emb = nn.Embedding(vocab_size, model_dim)
         self.bigram = BigramHashEmbedding(bigram_vocab_size, bigram_dim, model_dim, trigram=bool(int(os.environ.get("TRIGRAM", "0")))) if bigram_vocab_size > 0 else None
         self.smear = SmearGate(model_dim)
-        # Mirror the weight-tied 6L×2 loop structure of GPT.
+        # Mirror the weight-tied 5L×3 loop structure of GPT.
+        self.num_passes = 3
         self.num_encoder_layers = num_layers
         self.num_decoder_layers = num_layers
-        self.num_skip_weights = num_layers
+        self.num_skip_weights = num_layers * 2  # skip weights for decoder passes 1 and 2
         self.skip_weights = nn.Parameter(torch.ones(self.num_skip_weights, model_dim, dtype=torch.float32))
+        self.pass_router = nn.Linear(model_dim, self.num_passes, bias=False)
         # exp12: remember ln_scale flag for effective-depth schedule.
         self._ln_scale_enabled = bool(ln_scale)
         self.blocks = nn.ModuleList([
@@ -1507,28 +1551,38 @@ class _HessianGPT(nn.Module):
             return 1.0
         return 1.0 / math.sqrt(round_id * self.num_layers + layer_id + 1)
     def forward(self, input_ids, target_ids):
+        n = self.num_layers
         x = self.tok_emb(input_ids)
         if self.bigram is not None:
             x = x + self.bigram(input_ids)
         x = F.rms_norm(x, (x.size(-1),))
         x = self.smear(x)
         x0 = x
-        skips = []
         ve_cache = {}
-        # Pass 1 (encoder): run all `n` unique blocks, push skips.
-        for i in range(self.num_encoder_layers):
+        blend_logits = self.pass_router(x0)
+        blend_weights = F.softmax(blend_logits, dim=-1)
+        # Pass 0 (encoder)
+        skips = []
+        for i in range(n):
             ve = self._get_ve(i, input_ids, ve_cache)
             lnf = self._effective_ln_scale(0, i)
             x = self.blocks[i](x, x0, v_embed=ve, ln_scale_factor=lnf)
             skips.append(x)
-        # Pass 2 (decoder): reuse the SAME `n` blocks. Skips pop LIFO.
-        for i in range(self.num_decoder_layers):
-            pos = self.num_encoder_layers + i
-            if skips:
-                x = x + self.skip_weights[i].to(dtype=x.dtype)[None, None, :] * skips.pop()
-            ve = self._get_ve(pos, input_ids, ve_cache)
-            lnf = self._effective_ln_scale(1, i)
-            x = self.blocks[i](x, x0, v_embed=ve, ln_scale_factor=lnf)
+        pass_outputs = [x]
+        skips_rev = list(reversed(skips))
+        # Pass 1+ (decoder)
+        for pass_id in range(1, self.num_passes):
+            x_dec = x.detach()
+            for i in range(n):
+                pos = pass_id * n + i
+                skip_idx = (pass_id - 1) * n + i
+                x_dec = x_dec + self.skip_weights[skip_idx].to(dtype=x_dec.dtype)[None, None, :] * skips_rev[i]
+                ve = self._get_ve(pos, input_ids, ve_cache)
+                lnf = self._effective_ln_scale(pass_id, i)
+                x_dec = self.blocks[i](x_dec, x0, v_embed=ve, ln_scale_factor=lnf)
+            pass_outputs.append(x_dec)
+        stacked = torch.stack(pass_outputs, dim=-1)
+        x = (stacked * blend_weights.unsqueeze(2)).sum(dim=-1)
         x = self.final_norm(x)
         x_flat = x.reshape(-1, x.size(-1))
         targets = target_ids.reshape(-1)
@@ -1760,6 +1814,7 @@ def main() -> None:
     if base_model.skip_weights.numel() > 0:
         scalar_params.append(base_model.skip_weights)
     scalar_params.append(base_model.smear.gate)
+    scalar_params.append(base_model.pass_router.weight)  # blend router
     if base_model.bigram is not None:
         scalar_params.append(base_model.bigram.scale)
     token_lr = args.tied_embed_lr if args.tie_embeddings else args.embed_lr
@@ -1822,7 +1877,7 @@ def main() -> None:
     log0(f"mtp_num_heads:{args.mtp_num_heads} mtp_loss_weight:{args.mtp_loss_weight} mtp_params:{mtp_params}")
     xsa_layers = [i for i, b in enumerate(base_model.blocks) if b.attn.use_xsa]
     log0(f"XSA:last_{args.xsa_last_n} active_unique_blocks:{xsa_layers} (each block runs twice per forward)")
-    log0(f"weight_tied:num_unique_blocks={args.num_layers} effective_depth={2*args.num_layers} model_dim={args.model_dim} ln_scale_schedule=effective_depth(exp12)")
+    log0(f"weight_tied:num_unique_blocks={args.num_layers} effective_depth={3*args.num_layers} model_dim={args.model_dim} num_passes=3 detach_pass1+ ln_scale_schedule=effective_depth(exp12)")
     log0(f"world_size:{world_size} grad_accum_steps:{grad_accum_steps}")
     log0("sdp_backends:cudnn=False flash=True mem_efficient=False math=False")
     log0(f"attention_mode:gqa num_heads:{args.num_heads} num_kv_heads:{args.num_kv_heads}")
@@ -1912,9 +1967,15 @@ def main() -> None:
                 has_leading_space_lut,
                 is_boundary_token_lut,
             )
+            # Log blend stats if available
+            blend_str = ""
+            if hasattr(base_model, '_last_blend_weights') and base_model._last_blend_weights is not None:
+                bw = base_model._last_blend_weights.float().mean(dim=(0, 1))  # [num_passes]
+                blend_str = " blend_avg:" + "/".join(f"{w:.3f}" for w in bw.tolist())
             log0(
                 f"step:{step}/{args.iterations} val_loss:{val_loss:.4f} val_bpb:{val_bpb:.4f} "
                 f"train_time:{training_time_ms:.0f}ms step_avg:{training_time_ms / max(step, 1):.2f}ms"
+                f"{blend_str}"
             )
             torch.cuda.synchronize()
             t0 = time.perf_counter()
