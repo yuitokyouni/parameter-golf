@@ -1,0 +1,121 @@
+W0413 02:51:05.921000 31955 torch/distributed/run.py:851] 
+W0413 02:51:05.921000 31955 torch/distributed/run.py:851] *****************************************
+W0413 02:51:05.921000 31955 torch/distributed/run.py:851] Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+W0413 02:51:05.921000 31955 torch/distributed/run.py:851] *****************************************
+logs/exp16_1_smoke.txt
+val_bpb:enabled tokenizer_kind=sentencepiece tokenizer_path=./data/tokenizers/fineweb_1024_bpe.model
+train_loader:dataset:fineweb10B_sp1024 train_shards:10
+val_loader:shards pattern=./data/datasets/fineweb10B_sp1024/fineweb_val_*.bin tokens:62021632
+model_params:21554540
+mtp_num_heads:0 mtp_loss_weight:0.2 mtp_params:0
+XSA:last_5 active_unique_blocks:[0, 1, 2, 3, 4] (each block runs twice per forward)
+weight_tied:num_unique_blocks=5 effective_depth=15 model_dim=672 num_passes=3 detach_pass1+ ln_scale_schedule=effective_depth(exp12)
+world_size:4 grad_accum_steps:2
+sdp_backends:cudnn=False flash=True mem_efficient=False math=False
+attention_mode:gqa num_heads:8 num_kv_heads:4
+tie_embeddings:True embed_lr:0.035 head_lr:0.0 matrix_lr:0.025 scalar_lr:0.025
+train_batch_tokens:786432 train_seq_len:2048 iterations:20000 warmup_steps:20 max_wallclock_seconds:120.000
+seed:1337
+/usr/local/lib/python3.11/dist-packages/torch/_inductor/lowering.py:7836: UserWarning: 
+Online softmax is disabled on the fly since Inductor decides to
+split the reduction. Cut an issue to PyTorch if this is an
+important use case and you want to speed it up with online
+softmax.
+
+  warnings.warn(
+/usr/local/lib/python3.11/dist-packages/torch/_inductor/lowering.py:7836: UserWarning: 
+Online softmax is disabled on the fly since Inductor decides to
+split the reduction. Cut an issue to PyTorch if this is an
+important use case and you want to speed it up with online
+softmax.
+
+  warnings.warn(
+/usr/local/lib/python3.11/dist-packages/torch/_inductor/lowering.py:7836: UserWarning: 
+Online softmax is disabled on the fly since Inductor decides to
+split the reduction. Cut an issue to PyTorch if this is an
+important use case and you want to speed it up with online
+softmax.
+
+  warnings.warn(
+/usr/local/lib/python3.11/dist-packages/torch/_inductor/lowering.py:7836: UserWarning: 
+Online softmax is disabled on the fly since Inductor decides to
+split the reduction. Cut an issue to PyTorch if this is an
+important use case and you want to speed it up with online
+softmax.
+
+  warnings.warn(
+/usr/local/lib/python3.11/dist-packages/torch/_inductor/lowering.py:7836: UserWarning: 
+Online softmax is disabled on the fly since Inductor decides to
+split the reduction. Cut an issue to PyTorch if this is an
+important use case and you want to speed it up with online
+softmax.
+
+  warnings.warn(
+/usr/local/lib/python3.11/dist-packages/torch/_inductor/lowering.py:7836: UserWarning: 
+Online softmax is disabled on the fly since Inductor decides to
+split the reduction. Cut an issue to PyTorch if this is an
+important use case and you want to speed it up with online
+softmax.
+
+  warnings.warn(
+/usr/local/lib/python3.11/dist-packages/torch/_inductor/lowering.py:7836: UserWarning: 
+Online softmax is disabled on the fly since Inductor decides to
+split the reduction. Cut an issue to PyTorch if this is an
+important use case and you want to speed it up with online
+softmax.
+
+  warnings.warn(
+/usr/local/lib/python3.11/dist-packages/torch/_inductor/lowering.py:7836: UserWarning: 
+Online softmax is disabled on the fly since Inductor decides to
+split the reduction. Cut an issue to PyTorch if this is an
+important use case and you want to speed it up with online
+softmax.
+
+  warnings.warn(
+warmup_step:1/20
+warmup_step:2/20
+warmup_step:3/20
+warmup_step:4/20
+warmup_step:5/20
+warmup_step:6/20
+warmup_step:7/20
+warmup_step:8/20
+warmup_step:9/20
+warmup_step:10/20
+warmup_step:11/20
+warmup_step:12/20
+warmup_step:13/20
+warmup_step:14/20
+warmup_step:15/20
+warmup_step:16/20
+warmup_step:17/20
+warmup_step:18/20
+warmup_step:19/20
+warmup_step:20/20
+step:0/20000 val_loss:6.9382 val_bpb:4.1092 train_time:0ms step_avg:0.10ms blend_avg:0.333/0.333/0.333
+step:1/20000 train_loss:6.9399 train_time:954ms step_avg:954.31ms
+late_qat:enabled step:1 scale:0.0353
+step:2/20000 train_loss:12.9460 train_time:1293ms step_avg:646.38ms
+step:3/20000 train_loss:12.7185 train_time:1958ms step_avg:652.55ms
+step:4/20000 train_loss:12.4921 train_time:2623ms step_avg:655.84ms
+step:5/20000 train_loss:12.0739 train_time:3291ms step_avg:658.13ms
+step:6/20000 train_loss:11.6311 train_time:3957ms step_avg:659.48ms
+step:7/20000 train_loss:11.1654 train_time:4624ms step_avg:660.58ms
+step:8/20000 train_loss:10.6781 train_time:5290ms step_avg:661.26ms
+step:9/20000 train_loss:10.1169 train_time:5958ms step_avg:661.97ms
+step:10/20000 train_loss:9.6773 train_time:6624ms step_avg:662.42ms
+step:25/20000 val_loss:5.9514 val_bpb:3.5247 train_time:16836ms step_avg:673.43ms blend_avg:0.002/0.000/0.997
+step:50/20000 val_loss:5.7724 val_bpb:3.4187 train_time:33329ms step_avg:666.58ms blend_avg:0.000/0.000/1.000
+step:75/20000 val_loss:5.7324 val_bpb:3.3951 train_time:49868ms step_avg:664.91ms blend_avg:0.000/0.000/1.000
+step:100/20000 val_loss:5.7070 val_bpb:3.3800 train_time:66450ms step_avg:664.50ms blend_avg:0.000/0.000/1.000
+step:125/20000 val_loss:5.6861 val_bpb:3.3676 train_time:83050ms step_avg:664.40ms blend_avg:0.000/0.000/1.000
+step:150/20000 val_loss:5.6690 val_bpb:3.3575 train_time:103575ms step_avg:690.50ms blend_avg:0.000/0.000/1.000
+step:175/20000 val_loss:5.6625 val_bpb:3.3536 train_time:120205ms step_avg:686.88ms blend_avg:0.000/0.000/1.000
+step:176/20000 val_loss:5.6625 val_bpb:3.3536 train_time:120871ms step_avg:686.77ms blend_avg:0.000/0.000/1.000
+stopping_early: wallclock_cap train_time:120871ms step:176/20000
+peak memory allocated: 16434 MiB reserved: 17278 MiB
+ema:applying EMA weights (ema_count=176, final_effective_decay=0.95135)
+DIAGNOSTIC post_ema val_loss:5.6633 val_bpb:3.3541 eval_time:28540ms
+Serialized model: 84063007 bytes
+Code size: 111105 bytes
+gptq:SKIPPED (SKIP_GPTQ=1)
