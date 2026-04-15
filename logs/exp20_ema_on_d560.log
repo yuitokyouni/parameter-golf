@@ -1,0 +1,120 @@
+W0413 16:24:22.883000 136522409313408 torch/distributed/run.py:779] 
+W0413 16:24:22.883000 136522409313408 torch/distributed/run.py:779] *****************************************
+W0413 16:24:22.883000 136522409313408 torch/distributed/run.py:779] Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+W0413 16:24:22.883000 136522409313408 torch/distributed/run.py:779] *****************************************
+logs/exp20_ema_on_d560.txt
+val_bpb:enabled tokenizer_kind=sentencepiece tokenizer_path=./data/tokenizers/fineweb_1024_bpe.model
+train_loader:dataset:fineweb10B_sp1024 train_shards:80
+val_loader:shards pattern=./data/datasets/fineweb10B_sp1024/fineweb_val_*.bin tokens:62021632
+model_params:29326260
+mtp_num_heads:0 mtp_loss_weight:0.2 mtp_params:0
+XSA:last_6 active_unique_blocks:[4, 5, 6, 7, 8, 9] (each block runs twice per forward)
+weight_tied:num_unique_blocks=10 num_shared=4 num_indep=3 effective_depth=14 model_dim=560
+world_size:8 grad_accum_steps:1
+sdp_backends:cudnn=False flash=True mem_efficient=False math=False
+attention_mode:gqa num_heads:8 num_kv_heads:4
+tie_embeddings:True embed_lr:0.035 head_lr:0.0 matrix_lr:0.025 scalar_lr:0.025
+train_batch_tokens:786432 train_seq_len:2048 iterations:20000 warmup_steps:20 max_wallclock_seconds:600.000
+seed:1337
+[rank5]:W0413 16:25:29.617000 136719862683200 torch/fx/experimental/symbolic_shapes.py:4449] [0/0_1] rindex is not in var_ranges, defaulting to unknown range.
+[rank1]:W0413 16:25:29.618000 128518534207040 torch/fx/experimental/symbolic_shapes.py:4449] [0/0_1] rindex is not in var_ranges, defaulting to unknown range.
+[rank7]:W0413 16:25:29.976000 127782046656064 torch/fx/experimental/symbolic_shapes.py:4449] [0/0_1] rindex is not in var_ranges, defaulting to unknown range.
+[rank6]:W0413 16:25:29.983000 128964353836608 torch/fx/experimental/symbolic_shapes.py:4449] [0/0_1] rindex is not in var_ranges, defaulting to unknown range.
+[rank3]:W0413 16:25:30.094000 137984424474176 torch/fx/experimental/symbolic_shapes.py:4449] [0/0_1] rindex is not in var_ranges, defaulting to unknown range.
+[rank0]:W0413 16:25:30.440000 129554912269888 torch/fx/experimental/symbolic_shapes.py:4449] [0/0_1] rindex is not in var_ranges, defaulting to unknown range.
+[rank2]:W0413 16:25:30.728000 123542094566976 torch/fx/experimental/symbolic_shapes.py:4449] [0/0_1] rindex is not in var_ranges, defaulting to unknown range.
+[rank4]:W0413 16:25:30.800000 133468113581632 torch/fx/experimental/symbolic_shapes.py:4449] [0/0_1] rindex is not in var_ranges, defaulting to unknown range.
+warmup_step:1/20
+[rank1]:W0413 16:26:27.963000 128518534207040 torch/fx/experimental/symbolic_shapes.py:4449] [0/1] rindex is not in var_ranges, defaulting to unknown range.
+[rank0]:W0413 16:26:28.145000 129554912269888 torch/fx/experimental/symbolic_shapes.py:4449] [0/1] rindex is not in var_ranges, defaulting to unknown range.
+[rank7]:W0413 16:26:28.204000 127782046656064 torch/fx/experimental/symbolic_shapes.py:4449] [0/1] rindex is not in var_ranges, defaulting to unknown range.
+[rank4]:W0413 16:26:28.231000 133468113581632 torch/fx/experimental/symbolic_shapes.py:4449] [0/1] rindex is not in var_ranges, defaulting to unknown range.
+[rank6]:W0413 16:26:28.243000 128964353836608 torch/fx/experimental/symbolic_shapes.py:4449] [0/1] rindex is not in var_ranges, defaulting to unknown range.
+[rank5]:W0413 16:26:28.498000 136719862683200 torch/fx/experimental/symbolic_shapes.py:4449] [0/1] rindex is not in var_ranges, defaulting to unknown range.
+[rank2]:W0413 16:26:28.639000 123542094566976 torch/fx/experimental/symbolic_shapes.py:4449] [0/1] rindex is not in var_ranges, defaulting to unknown range.
+[rank3]:W0413 16:26:28.649000 137984424474176 torch/fx/experimental/symbolic_shapes.py:4449] [0/1] rindex is not in var_ranges, defaulting to unknown range.
+warmup_step:2/20
+warmup_step:3/20
+warmup_step:4/20
+warmup_step:5/20
+warmup_step:6/20
+warmup_step:7/20
+warmup_step:8/20
+warmup_step:9/20
+warmup_step:10/20
+warmup_step:11/20
+warmup_step:12/20
+warmup_step:13/20
+warmup_step:14/20
+warmup_step:15/20
+warmup_step:16/20
+warmup_step:17/20
+warmup_step:18/20
+warmup_step:19/20
+warmup_step:20/20
+step:0/20000 val_loss:6.9297 val_bpb:4.1041 train_time:0ms step_avg:0.01ms
+step:1/20000 train_loss:6.9321 train_time:217ms step_avg:217.14ms
+step:2/20000 train_loss:8.5774 train_time:303ms step_avg:151.34ms
+step:3/20000 train_loss:7.5666 train_time:503ms step_avg:167.81ms
+step:4/20000 train_loss:8.0967 train_time:705ms step_avg:176.14ms
+step:5/20000 train_loss:8.4649 train_time:905ms step_avg:180.95ms
+step:6/20000 train_loss:8.1766 train_time:1105ms step_avg:184.23ms
+step:7/20000 train_loss:7.6545 train_time:1307ms step_avg:186.69ms
+step:8/20000 train_loss:7.0721 train_time:1507ms step_avg:188.35ms
+step:9/20000 train_loss:6.7605 train_time:1708ms step_avg:189.76ms
+step:10/20000 train_loss:6.4016 train_time:1908ms step_avg:190.84ms
+step:200/20000 val_loss:2.7168 val_bpb:1.6090 train_time:40302ms step_avg:201.51ms
+step:400/20000 val_loss:2.4472 val_bpb:1.4494 train_time:80822ms step_avg:202.06ms
+step:500/20000 train_loss:2.4145 train_time:100892ms step_avg:201.78ms
+step:600/20000 val_loss:2.3266 val_bpb:1.3779 train_time:121237ms step_avg:202.06ms
+step:800/20000 val_loss:2.2500 val_bpb:1.3326 train_time:161756ms step_avg:202.19ms
+step:1000/20000 train_loss:2.2533 train_time:201966ms step_avg:201.97ms
+step:1000/20000 val_loss:2.2053 val_bpb:1.3061 train_time:202086ms step_avg:202.09ms
+step:1200/20000 val_loss:2.1745 val_bpb:1.2878 train_time:242484ms step_avg:202.07ms
+step:1400/20000 val_loss:2.1506 val_bpb:1.2737 train_time:282875ms step_avg:202.05ms
+step:1500/20000 train_loss:2.1798 train_time:302885ms step_avg:201.92ms
+step:1600/20000 val_loss:2.1304 val_bpb:1.2617 train_time:323202ms step_avg:202.00ms
+step:1800/20000 val_loss:2.1030 val_bpb:1.2455 train_time:363610ms step_avg:202.01ms
+step:2000/20000 train_loss:2.0135 train_time:403819ms step_avg:201.91ms
+step:2000/20000 val_loss:2.0775 val_bpb:1.2304 train_time:403939ms step_avg:201.97ms
+step:2200/20000 val_loss:2.0566 val_bpb:1.2180 train_time:444331ms step_avg:201.97ms
+swa:start step:2300
+step:2400/20000 val_loss:2.0359 val_bpb:1.2058 train_time:484931ms step_avg:202.05ms
+late_qat:enabled step:2445 scale:0.1498
+W0413 16:36:36.515000 136522409313408 torch/distributed/elastic/agent/server/api.py:688] Received 15 death signal, shutting down workers
+W0413 16:36:36.516000 136522409313408 torch/distributed/elastic/multiprocessing/api.py:858] Sending process 30479 closing signal SIGTERM
+W0413 16:36:36.521000 136522409313408 torch/distributed/elastic/multiprocessing/api.py:858] Sending process 30480 closing signal SIGTERM
+W0413 16:36:36.523000 136522409313408 torch/distributed/elastic/multiprocessing/api.py:858] Sending process 30481 closing signal SIGTERM
+W0413 16:36:36.529000 136522409313408 torch/distributed/elastic/multiprocessing/api.py:858] Sending process 30482 closing signal SIGTERM
+W0413 16:36:36.535000 136522409313408 torch/distributed/elastic/multiprocessing/api.py:858] Sending process 30483 closing signal SIGTERM
+W0413 16:36:36.543000 136522409313408 torch/distributed/elastic/multiprocessing/api.py:858] Sending process 30484 closing signal SIGTERM
+W0413 16:36:36.549000 136522409313408 torch/distributed/elastic/multiprocessing/api.py:858] Sending process 30485 closing signal SIGTERM
+W0413 16:36:36.570000 136522409313408 torch/distributed/elastic/multiprocessing/api.py:858] Sending process 30486 closing signal SIGTERM
+Traceback (most recent call last):
+  File "/usr/local/bin/torchrun", line 8, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/usr/local/lib/python3.11/dist-packages/torch/distributed/elastic/multiprocessing/errors/__init__.py", line 348, in wrapper
+    return f(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/dist-packages/torch/distributed/run.py", line 901, in main
+    run(args)
+  File "/usr/local/lib/python3.11/dist-packages/torch/distributed/run.py", line 892, in run
+    elastic_launch(
+  File "/usr/local/lib/python3.11/dist-packages/torch/distributed/launcher/api.py", line 133, in __call__
+    return launch_agent(self._config, self._entrypoint, list(args))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/dist-packages/torch/distributed/launcher/api.py", line 255, in launch_agent
+    result = agent.run()
+             ^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/dist-packages/torch/distributed/elastic/metrics/api.py", line 124, in wrapper
+    result = f(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/dist-packages/torch/distributed/elastic/agent/server/api.py", line 680, in run
+    result = self._invoke_run(role)
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/dist-packages/torch/distributed/elastic/agent/server/api.py", line 835, in _invoke_run
+    time.sleep(monitor_interval)
+  File "/usr/local/lib/python3.11/dist-packages/torch/distributed/elastic/multiprocessing/api.py", line 79, in _terminate_process_handler
+    raise SignalException(f"Process {os.getpid()} got signal: {sigval}", sigval=sigval)
+torch.distributed.elastic.multiprocessing.api.SignalException: Process 30412 got signal: 15

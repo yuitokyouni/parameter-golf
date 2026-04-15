@@ -2,10 +2,62 @@ import base64, collections, copy, fcntl, glob, io, json, lzma, math, os
 from pathlib import Path
 import random, re, subprocess, sys, time, uuid, numpy as np, sentencepiece as spm, torch, torch.distributed as dist, torch.nn.functional as F
 from torch import nn
-from flash_attn_interface import (
-    flash_attn_func as flash_attn_3_func,
-    flash_attn_varlen_func,
-)
+# --- Attention backend shim ---
+# The 1st-place record imports flash_attn_3_func / flash_attn_varlen_func from
+# flash_attn_interface (Hopper only). Provide SDPA-based fallbacks so this
+# runs on Ada (RTX 4090) and other non-Hopper GPUs.
+# Call-site signature for flash_attn_3_func: (q, k, v, causal=True),
+#   q: [B, T, H, D]; k, v: [B, T, Hkv, D]; returns [B, T, H, D].
+# Call-site signature for flash_attn_varlen_func: (q, k, v, cu_seqlens_q,
+#   cu_seqlens_k, max_seqlen_q, max_seqlen_k, causal, window_size),
+#   q,k,v: [total_T, H, D] (no batch); returns [total_T, H, D].
+try:
+    from flash_attn_interface import (
+        flash_attn_func as _flash_attn_3_func,
+        flash_attn_varlen_func as _flash_attn_varlen_func,
+    )
+    def flash_attn_3_func(q, k, v, causal: bool = True):
+        return _flash_attn_3_func(q, k, v, causal=causal)
+    def flash_attn_varlen_func(q, k, v, cu_seqlens_q, cu_seqlens_k,
+                               max_seqlen_q, max_seqlen_k,
+                               causal: bool = True, window_size=(-1, -1)):
+        return _flash_attn_varlen_func(
+            q, k, v,
+            cu_seqlens_q=cu_seqlens_q, cu_seqlens_k=cu_seqlens_k,
+            max_seqlen_q=max_seqlen_q, max_seqlen_k=max_seqlen_k,
+            causal=causal, window_size=window_size,
+        )
+except Exception:
+    def flash_attn_3_func(q, k, v, causal: bool = True):
+        # q: [B, T, H, D]; k, v: [B, T, Hkv, D]
+        q_ = q.transpose(1, 2)  # -> [B, H, T, D]
+        k_ = k.transpose(1, 2)
+        v_ = v.transpose(1, 2)
+        Hq, Hkv = q_.size(1), k_.size(1)
+        if Hq != Hkv:
+            rep = Hq // Hkv
+            k_ = k_.repeat_interleave(rep, dim=1)
+            v_ = v_.repeat_interleave(rep, dim=1)
+        out = F.scaled_dot_product_attention(q_, k_, v_, is_causal=causal)
+        return out.transpose(1, 2).contiguous()
+    def flash_attn_varlen_func(q, k, v, cu_seqlens_q, cu_seqlens_k,
+                               max_seqlen_q, max_seqlen_k,
+                               causal: bool = True, window_size=(-1, -1)):
+        # q,k,v: [total_T, H, D]; loop per document segment via SDPA.
+        cs = cu_seqlens_q.tolist()
+        outs = []
+        for s, e in zip(cs[:-1], cs[1:]):
+            qs = q[s:e].transpose(0, 1).unsqueeze(0)  # [1, H, t, D]
+            ks = k[s:e].transpose(0, 1).unsqueeze(0)
+            vs = v[s:e].transpose(0, 1).unsqueeze(0)
+            Hq, Hkv = qs.size(1), ks.size(1)
+            if Hq != Hkv:
+                rep = Hq // Hkv
+                ks = ks.repeat_interleave(rep, dim=1)
+                vs = vs.repeat_interleave(rep, dim=1)
+            o = F.scaled_dot_product_attention(qs, ks, vs, is_causal=causal)
+            outs.append(o.squeeze(0).transpose(0, 1).contiguous())
+        return torch.cat(outs, dim=0)
 from concurrent.futures import ThreadPoolExecutor
 import triton
 import triton.language as tl
