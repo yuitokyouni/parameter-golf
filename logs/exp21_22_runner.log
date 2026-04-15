@@ -1,0 +1,211 @@
+=== exp21 rerun (SDPA fallback) ===
+Wed Apr 15 03:50:08 UTC 2026
+W0415 03:50:09.884000 132106599941248 torch/distributed/run.py:779] 
+W0415 03:50:09.884000 132106599941248 torch/distributed/run.py:779] *****************************************
+W0415 03:50:09.884000 132106599941248 torch/distributed/run.py:779] Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+W0415 03:50:09.884000 132106599941248 torch/distributed/run.py:779] *****************************************
+Traceback (most recent call last):
+  File "/workspace/parameter-golf/train_exp21.py", line 64, in <module>
+Traceback (most recent call last):
+  File "/workspace/parameter-golf/train_exp21.py", line 64, in <module>
+Traceback (most recent call last):
+  File "/workspace/parameter-golf/train_exp21.py", line 64, in <module>
+    from triton.tools.tensor_descriptor import TensorDescriptor
+    from triton.tools.tensor_descriptor import TensorDescriptor
+ModuleNotFoundError: No module named 'triton.tools.tensor_descriptor'
+ModuleNotFoundError: No module named 'triton.tools.tensor_descriptor'
+    from triton.tools.tensor_descriptor import TensorDescriptor
+ModuleNotFoundError: No module named 'triton.tools.tensor_descriptor'
+Traceback (most recent call last):
+  File "/workspace/parameter-golf/train_exp21.py", line 64, in <module>
+    from triton.tools.tensor_descriptor import TensorDescriptor
+ModuleNotFoundError: No module named 'triton.tools.tensor_descriptor'
+Traceback (most recent call last):
+  File "/workspace/parameter-golf/train_exp21.py", line 64, in <module>
+    from triton.tools.tensor_descriptor import TensorDescriptor
+ModuleNotFoundError: No module named 'triton.tools.tensor_descriptor'
+Traceback (most recent call last):
+  File "/workspace/parameter-golf/train_exp21.py", line 64, in <module>
+    from triton.tools.tensor_descriptor import TensorDescriptor
+ModuleNotFoundError: No module named 'triton.tools.tensor_descriptor'
+Traceback (most recent call last):
+  File "/workspace/parameter-golf/train_exp21.py", line 64, in <module>
+    from triton.tools.tensor_descriptor import TensorDescriptor
+ModuleNotFoundError: No module named 'triton.tools.tensor_descriptor'
+Traceback (most recent call last):
+  File "/workspace/parameter-golf/train_exp21.py", line 64, in <module>
+    from triton.tools.tensor_descriptor import TensorDescriptor
+ModuleNotFoundError: No module named 'triton.tools.tensor_descriptor'
+W0415 03:50:11.576000 132106599941248 torch/distributed/elastic/multiprocessing/api.py:858] Sending process 7972 closing signal SIGTERM
+W0415 03:50:11.576000 132106599941248 torch/distributed/elastic/multiprocessing/api.py:858] Sending process 7973 closing signal SIGTERM
+E0415 03:50:11.608000 132106599941248 torch/distributed/elastic/multiprocessing/api.py:833] failed (exitcode: 1) local_rank: 2 (pid: 7974) of binary: /usr/bin/python
+Traceback (most recent call last):
+  File "/usr/local/bin/torchrun", line 8, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/usr/local/lib/python3.11/dist-packages/torch/distributed/elastic/multiprocessing/errors/__init__.py", line 348, in wrapper
+    return f(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/dist-packages/torch/distributed/run.py", line 901, in main
+    run(args)
+  File "/usr/local/lib/python3.11/dist-packages/torch/distributed/run.py", line 892, in run
+    elastic_launch(
+  File "/usr/local/lib/python3.11/dist-packages/torch/distributed/launcher/api.py", line 133, in __call__
+    return launch_agent(self._config, self._entrypoint, list(args))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/dist-packages/torch/distributed/launcher/api.py", line 264, in launch_agent
+    raise ChildFailedError(
+torch.distributed.elastic.multiprocessing.errors.ChildFailedError: 
+============================================================
+train_exp21.py FAILED
+------------------------------------------------------------
+Failures:
+[1]:
+  time      : 2026-04-15_03:50:11
+  host      : 6c428770033a
+  rank      : 3 (local_rank: 3)
+  exitcode  : 1 (pid: 7975)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+[2]:
+  time      : 2026-04-15_03:50:11
+  host      : 6c428770033a
+  rank      : 4 (local_rank: 4)
+  exitcode  : 1 (pid: 7976)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+[3]:
+  time      : 2026-04-15_03:50:11
+  host      : 6c428770033a
+  rank      : 5 (local_rank: 5)
+  exitcode  : 1 (pid: 7977)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+[4]:
+  time      : 2026-04-15_03:50:11
+  host      : 6c428770033a
+  rank      : 6 (local_rank: 6)
+  exitcode  : 1 (pid: 7978)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+[5]:
+  time      : 2026-04-15_03:50:11
+  host      : 6c428770033a
+  rank      : 7 (local_rank: 7)
+  exitcode  : 1 (pid: 7979)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+------------------------------------------------------------
+Root Cause (first observed failure):
+[0]:
+  time      : 2026-04-15_03:50:11
+  host      : 6c428770033a
+  rank      : 2 (local_rank: 2)
+  exitcode  : 1 (pid: 7974)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+============================================================
+=== exp21 done ===
+Wed Apr 15 03:50:11 UTC 2026
+=== exp22 TTT_ENABLED=1 ===
+Wed Apr 15 03:50:11 UTC 2026
+W0415 03:50:12.960000 137253517284480 torch/distributed/run.py:779] 
+W0415 03:50:12.960000 137253517284480 torch/distributed/run.py:779] *****************************************
+W0415 03:50:12.960000 137253517284480 torch/distributed/run.py:779] Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+W0415 03:50:12.960000 137253517284480 torch/distributed/run.py:779] *****************************************
+logs/exp22_ttt.txt
+val_bpb:enabled tokenizer_kind=sentencepiece tokenizer_path=./data/tokenizers/fineweb_1024_bpe.model
+train_loader:dataset:fineweb10B_sp1024 train_shards:80
+val_loader:shards pattern=./data/datasets/fineweb10B_sp1024/fineweb_val_*.bin tokens:62021632
+model_params:25632916
+mtp_num_heads:0 mtp_loss_weight:0.2 mtp_params:0
+XSA:last_6 active_unique_blocks:[0, 1, 2, 3, 4, 5] (each block runs twice per forward)
+weight_tied:num_unique_blocks=6 effective_depth=12 model_dim=672 ln_scale_schedule=cached_per_block(exp11)
+film_ttt:enabled=True lr=0.01 chunk_size=48
+film_params:16128 (63.0KB)
+world_size:8 grad_accum_steps:1
+sdp_backends:cudnn=False flash=True mem_efficient=False math=False
+attention_mode:gqa num_heads:8 num_kv_heads:4
+tie_embeddings:True embed_lr:0.035 head_lr:0.0 matrix_lr:0.025 scalar_lr:0.025
+train_batch_tokens:786432 train_seq_len:2048 iterations:20000 warmup_steps:20 max_wallclock_seconds:600.000
+seed:1337
+[rank0]:W0415 03:51:19.853000 136443991434816 torch/fx/experimental/symbolic_shapes.py:4449] [0/0_1] rindex is not in var_ranges, defaulting to unknown range.
+[rank6]:W0415 03:51:19.972000 127746369902144 torch/fx/experimental/symbolic_shapes.py:4449] [0/0_1] rindex is not in var_ranges, defaulting to unknown range.
+[rank7]:W0415 03:51:20.277000 124110832395840 torch/fx/experimental/symbolic_shapes.py:4449] [0/0_1] rindex is not in var_ranges, defaulting to unknown range.
+[rank5]:W0415 03:51:20.350000 123951383828032 torch/fx/experimental/symbolic_shapes.py:4449] [0/0_1] rindex is not in var_ranges, defaulting to unknown range.
+[rank3]:W0415 03:51:20.570000 135701068772928 torch/fx/experimental/symbolic_shapes.py:4449] [0/0_1] rindex is not in var_ranges, defaulting to unknown range.
+[rank2]:W0415 03:51:20.597000 139193126422080 torch/fx/experimental/symbolic_shapes.py:4449] [0/0_1] rindex is not in var_ranges, defaulting to unknown range.
+[rank1]:W0415 03:51:20.753000 126507037234752 torch/fx/experimental/symbolic_shapes.py:4449] [0/0_1] rindex is not in var_ranges, defaulting to unknown range.
+[rank4]:W0415 03:51:20.865000 136419914020416 torch/fx/experimental/symbolic_shapes.py:4449] [0/0_1] rindex is not in var_ranges, defaulting to unknown range.
+warmup_step:1/20
+[rank3]:W0415 03:52:15.397000 135701068772928 torch/fx/experimental/symbolic_shapes.py:4449] [0/1] rindex is not in var_ranges, defaulting to unknown range.
+[rank5]:W0415 03:52:15.488000 123951383828032 torch/fx/experimental/symbolic_shapes.py:4449] [0/1] rindex is not in var_ranges, defaulting to unknown range.
+[rank7]:W0415 03:52:15.599000 124110832395840 torch/fx/experimental/symbolic_shapes.py:4449] [0/1] rindex is not in var_ranges, defaulting to unknown range.
+[rank4]:W0415 03:52:15.782000 136419914020416 torch/fx/experimental/symbolic_shapes.py:4449] [0/1] rindex is not in var_ranges, defaulting to unknown range.
+[rank1]:W0415 03:52:15.834000 126507037234752 torch/fx/experimental/symbolic_shapes.py:4449] [0/1] rindex is not in var_ranges, defaulting to unknown range.
+[rank0]:W0415 03:52:15.865000 136443991434816 torch/fx/experimental/symbolic_shapes.py:4449] [0/1] rindex is not in var_ranges, defaulting to unknown range.
+[rank6]:W0415 03:52:15.886000 127746369902144 torch/fx/experimental/symbolic_shapes.py:4449] [0/1] rindex is not in var_ranges, defaulting to unknown range.
+[rank2]:W0415 03:52:16.582000 139193126422080 torch/fx/experimental/symbolic_shapes.py:4449] [0/1] rindex is not in var_ranges, defaulting to unknown range.
+warmup_step:2/20
+warmup_step:3/20
+warmup_step:4/20
+warmup_step:5/20
+warmup_step:6/20
+warmup_step:7/20
+warmup_step:8/20
+warmup_step:9/20
+warmup_step:10/20
+warmup_step:11/20
+warmup_step:12/20
+warmup_step:13/20
+warmup_step:14/20
+warmup_step:15/20
+warmup_step:16/20
+warmup_step:17/20
+warmup_step:18/20
+warmup_step:19/20
+warmup_step:20/20
+step:0/20000 val_loss:6.9349 val_bpb:4.1073 train_time:0ms step_avg:0.01ms
+step:1/20000 train_loss:6.9397 train_time:212ms step_avg:211.90ms
+step:2/20000 train_loss:8.7680 train_time:295ms step_avg:147.47ms
+step:3/20000 train_loss:8.7656 train_time:506ms step_avg:168.63ms
+step:4/20000 train_loss:8.9756 train_time:719ms step_avg:179.65ms
+step:5/20000 train_loss:8.8111 train_time:932ms step_avg:186.30ms
+step:6/20000 train_loss:8.6486 train_time:1145ms step_avg:190.85ms
+step:7/20000 train_loss:8.3335 train_time:1358ms step_avg:193.95ms
+step:8/20000 train_loss:7.7350 train_time:1571ms step_avg:196.39ms
+step:9/20000 train_loss:7.0870 train_time:1784ms step_avg:198.25ms
+step:10/20000 train_loss:6.5631 train_time:1997ms step_avg:199.67ms
+step:200/20000 val_loss:2.7807 val_bpb:1.6469 train_time:42646ms step_avg:213.23ms
+step:400/20000 val_loss:2.4751 val_bpb:1.4659 train_time:85367ms step_avg:213.42ms
+step:500/20000 train_loss:2.4315 train_time:106512ms step_avg:213.02ms
+step:600/20000 val_loss:2.3376 val_bpb:1.3845 train_time:128020ms step_avg:213.37ms
+step:800/20000 val_loss:2.2598 val_bpb:1.3384 train_time:170738ms step_avg:213.42ms
+step:1000/20000 train_loss:2.2554 train_time:213229ms step_avg:213.23ms
+step:1000/20000 val_loss:2.2084 val_bpb:1.3079 train_time:213377ms step_avg:213.38ms
+step:1200/20000 val_loss:2.1756 val_bpb:1.2885 train_time:256100ms step_avg:213.42ms
+step:1400/20000 val_loss:2.1522 val_bpb:1.2746 train_time:298820ms step_avg:213.44ms
+step:1500/20000 train_loss:2.1810 train_time:319965ms step_avg:213.31ms
+step:1600/20000 val_loss:2.1310 val_bpb:1.2621 train_time:341478ms step_avg:213.42ms
+step:1800/20000 val_loss:2.1035 val_bpb:1.2458 train_time:384223ms step_avg:213.46ms
+step:2000/20000 train_loss:2.0151 train_time:426721ms step_avg:213.36ms
+step:2000/20000 val_loss:2.0781 val_bpb:1.2308 train_time:426869ms step_avg:213.43ms
+swa:start step:2150
+step:2200/20000 val_loss:2.0567 val_bpb:1.2181 train_time:469748ms step_avg:213.52ms
+late_qat:enabled step:2286 scale:0.1497
+step:2400/20000 val_loss:2.0359 val_bpb:1.2058 train_time:512595ms step_avg:213.58ms
+step:2500/20000 train_loss:2.0984 train_time:533828ms step_avg:213.53ms
+step:2600/20000 val_loss:2.0179 val_bpb:1.1951 train_time:555469ms step_avg:213.64ms
+step:2800/20000 val_loss:2.0054 val_bpb:1.1877 train_time:598348ms step_avg:213.70ms
+step:2809/20000 val_loss:2.0053 val_bpb:1.1877 train_time:600262ms step_avg:213.69ms
+stopping_early: wallclock_cap train_time:600262ms step:2809/20000
+peak memory allocated: 43108 MiB reserved: 48632 MiB
+ema:applying EMA weights (ema_count=2809, final_effective_decay=0.99681)
+DIAGNOSTIC post_ema val_loss:2.0062 val_bpb:1.1882 eval_time:4430ms
+Serialized model: 100388261 bytes
+Code size: 115014 bytes
+gptq:building non-banked model for Hessian collection...
+gptq:generating autoregressive calibration data (64 seqs x 2048 tokens, temp=0.8)...
+/tmp/run_exp21_22.sh: line 14:  7984 Killed                  MAX_WALLCLOCK_SECONDS=600 EVAL_STRIDE=64 VAL_LOSS_EVERY=200 EMA_DECAY=0.997 DATA_PATH=./data/datasets/fineweb10B_sp1024/ TOKENIZER_PATH=./data/tokenizers/fineweb_1024_bpe.model VOCAB_SIZE=1024 TTT_ENABLED=1 RUN_ID=exp22_ttt torchrun --standalone --nproc_per_node=8 train_exp22.py
+=== exp22 TTT done ===
+Wed Apr 15 04:06:04 UTC 2026

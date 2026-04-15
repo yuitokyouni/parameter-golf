@@ -1,0 +1,105 @@
+W0415 03:50:09.884000 132106599941248 torch/distributed/run.py:779] 
+W0415 03:50:09.884000 132106599941248 torch/distributed/run.py:779] *****************************************
+W0415 03:50:09.884000 132106599941248 torch/distributed/run.py:779] Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+W0415 03:50:09.884000 132106599941248 torch/distributed/run.py:779] *****************************************
+Traceback (most recent call last):
+  File "/workspace/parameter-golf/train_exp21.py", line 64, in <module>
+Traceback (most recent call last):
+  File "/workspace/parameter-golf/train_exp21.py", line 64, in <module>
+Traceback (most recent call last):
+  File "/workspace/parameter-golf/train_exp21.py", line 64, in <module>
+    from triton.tools.tensor_descriptor import TensorDescriptor
+    from triton.tools.tensor_descriptor import TensorDescriptor
+ModuleNotFoundError: No module named 'triton.tools.tensor_descriptor'
+ModuleNotFoundError: No module named 'triton.tools.tensor_descriptor'
+    from triton.tools.tensor_descriptor import TensorDescriptor
+ModuleNotFoundError: No module named 'triton.tools.tensor_descriptor'
+Traceback (most recent call last):
+  File "/workspace/parameter-golf/train_exp21.py", line 64, in <module>
+    from triton.tools.tensor_descriptor import TensorDescriptor
+ModuleNotFoundError: No module named 'triton.tools.tensor_descriptor'
+Traceback (most recent call last):
+  File "/workspace/parameter-golf/train_exp21.py", line 64, in <module>
+    from triton.tools.tensor_descriptor import TensorDescriptor
+ModuleNotFoundError: No module named 'triton.tools.tensor_descriptor'
+Traceback (most recent call last):
+  File "/workspace/parameter-golf/train_exp21.py", line 64, in <module>
+    from triton.tools.tensor_descriptor import TensorDescriptor
+ModuleNotFoundError: No module named 'triton.tools.tensor_descriptor'
+Traceback (most recent call last):
+  File "/workspace/parameter-golf/train_exp21.py", line 64, in <module>
+    from triton.tools.tensor_descriptor import TensorDescriptor
+ModuleNotFoundError: No module named 'triton.tools.tensor_descriptor'
+Traceback (most recent call last):
+  File "/workspace/parameter-golf/train_exp21.py", line 64, in <module>
+    from triton.tools.tensor_descriptor import TensorDescriptor
+ModuleNotFoundError: No module named 'triton.tools.tensor_descriptor'
+W0415 03:50:11.576000 132106599941248 torch/distributed/elastic/multiprocessing/api.py:858] Sending process 7972 closing signal SIGTERM
+W0415 03:50:11.576000 132106599941248 torch/distributed/elastic/multiprocessing/api.py:858] Sending process 7973 closing signal SIGTERM
+E0415 03:50:11.608000 132106599941248 torch/distributed/elastic/multiprocessing/api.py:833] failed (exitcode: 1) local_rank: 2 (pid: 7974) of binary: /usr/bin/python
+Traceback (most recent call last):
+  File "/usr/local/bin/torchrun", line 8, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/usr/local/lib/python3.11/dist-packages/torch/distributed/elastic/multiprocessing/errors/__init__.py", line 348, in wrapper
+    return f(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/dist-packages/torch/distributed/run.py", line 901, in main
+    run(args)
+  File "/usr/local/lib/python3.11/dist-packages/torch/distributed/run.py", line 892, in run
+    elastic_launch(
+  File "/usr/local/lib/python3.11/dist-packages/torch/distributed/launcher/api.py", line 133, in __call__
+    return launch_agent(self._config, self._entrypoint, list(args))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/dist-packages/torch/distributed/launcher/api.py", line 264, in launch_agent
+    raise ChildFailedError(
+torch.distributed.elastic.multiprocessing.errors.ChildFailedError: 
+============================================================
+train_exp21.py FAILED
+------------------------------------------------------------
+Failures:
+[1]:
+  time      : 2026-04-15_03:50:11
+  host      : 6c428770033a
+  rank      : 3 (local_rank: 3)
+  exitcode  : 1 (pid: 7975)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+[2]:
+  time      : 2026-04-15_03:50:11
+  host      : 6c428770033a
+  rank      : 4 (local_rank: 4)
+  exitcode  : 1 (pid: 7976)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+[3]:
+  time      : 2026-04-15_03:50:11
+  host      : 6c428770033a
+  rank      : 5 (local_rank: 5)
+  exitcode  : 1 (pid: 7977)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+[4]:
+  time      : 2026-04-15_03:50:11
+  host      : 6c428770033a
+  rank      : 6 (local_rank: 6)
+  exitcode  : 1 (pid: 7978)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+[5]:
+  time      : 2026-04-15_03:50:11
+  host      : 6c428770033a
+  rank      : 7 (local_rank: 7)
+  exitcode  : 1 (pid: 7979)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+------------------------------------------------------------
+Root Cause (first observed failure):
+[0]:
+  time      : 2026-04-15_03:50:11
+  host      : 6c428770033a
+  rank      : 2 (local_rank: 2)
+  exitcode  : 1 (pid: 7974)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+============================================================
